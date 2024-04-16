@@ -86,6 +86,11 @@ async def gitlab_webhook(background_tasks: BackgroundTasks, request: Request):
         url = data['object_attributes'].get('url')
         get_logger().info(f"New merge request: {url}")
         await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
+    elif (data.get('object_kind') == 'merge_request' and data['object_attributes'].get('action') == 'update'
+          and 'oldrev' in data['object_attributes']):  # new commit push to MR
+        url = data['object_attributes'].get('url')
+        get_logger().info(f"New commit push: {url}")
+        await _perform_commands_gitlab("pr_commands", PRAgent(), url, log_context)
     elif data.get('object_kind') == 'note' and data['event_type'] == 'note': # comment on MR
         if 'merge_request' in data:
             mr = data['merge_request']
